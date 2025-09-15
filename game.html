@@ -31,36 +31,29 @@ const timerDiv = document.getElementById('timer');
 const counter = document.getElementById('counter');
 const clickBtn = document.getElementById('clickBtn');
 
-// Функция проверки у бота, можно ли стартовать игру
 function checkStart() {
   fetch(`http://localhost:3000/check-start/${userId}`)
     .then(r => r.json())
     .then(data => {
       playersCount.innerText = `Участников: ${data.count}`;
-      if (data.start) {
-        startCountdown();
-      } else {
-        setTimeout(checkStart, 1000);
-      }
+      if (data.start) startCountdown();
+      else setTimeout(checkStart, 1000);
     });
 }
 
-// ======== Отсчёт перед игрой ========
 function startCountdown() {
   let count = 3;
   status.innerText = 'Игра начнётся через ' + count;
   const countdown = setInterval(() => {
     count--;
-    if (count > 0) {
-      status.innerText = 'Игра начнётся через ' + count;
-    } else {
+    if (count > 0) status.innerText = 'Игра начнётся через ' + count;
+    else {
       clearInterval(countdown);
       startGame();
     }
   }, 1000);
 }
 
-// ======== Основная игра ========
 function startGame() {
   status.innerText = 'Игра началась!';
   clickBtn.style.display = 'inline-block';
@@ -90,7 +83,7 @@ function startGame() {
   }, 1000);
 }
 
-// ======== Старт проверки ========
+// старт проверки
 checkStart();
 </script>
 </body>
