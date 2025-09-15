@@ -25,9 +25,14 @@ const timerDiv = document.getElementById('timer');
 const counter = document.getElementById('counter');
 const clickBtn = document.getElementById('clickBtn');
 
-// Игрок ждёт, пока бот скажет, что в комнате достаточно игроков
-// Для теста используем setTimeout, в реальном проекте бот сигнализирует через Web App initData или endpoint
-setTimeout(() => startCountdown(), 2000); // имитация поиска игроков
+const params = new URLSearchParams(window.location.search);
+const startGameSignal = params.get('start') === 'true';
+
+if (!startGameSignal) {
+  status.innerText = 'Поиск игроков...';
+} else {
+  startCountdown();
+}
 
 function startCountdown() {
   let count = 3;
@@ -63,13 +68,8 @@ function startGame() {
       status.innerText = 'Игра окончена!';
 
       if (window.Telegram.WebApp) {
-        // Отправляем результат боту
         window.Telegram.WebApp.sendData(JSON.stringify({ clicks }));
-
-        // Закрываем Web App через 500мс
-        setTimeout(() => {
-          window.Telegram.WebApp.close();
-        }, 500);
+        setTimeout(() => window.Telegram.WebApp.close(), 500);
       } else {
         alert('Игра окончена! Ваши клики: ' + clicks);
       }
