@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Click Casino</title>
 <style>
   body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-  #status { font-size: 24px; margin-bottom: 20px; }
-  #playersCount { font-size: 20px; margin-bottom: 20px; }
-  #timer { font-size: 24px; margin-bottom: 20px; }
-  #counter { font-size: 30px; margin-bottom: 20px; }
-  #clickBtn { font-size: 24px; padding: 20px 40px; display: none; }
+  #status { font-size: 24px; margin-bottom: 10px; }
+  #playersCount { font-size: 18px; margin-bottom: 10px; }
+  #timer { font-size: 22px; margin-bottom: 10px; }
+  #counter { font-size: 28px; margin-bottom: 14px; }
+  #clickBtn { font-size: 24px; padding: 18px 36px; display: none; }
 </style>
 </head>
 <body>
@@ -25,66 +25,78 @@ const urlParams = new URLSearchParams(window.location.search);
 const userId = urlParams.get('user');
 let clicks = 0;
 
-const status = document.getElementById('status');
-const playersCount = document.getElementById('playersCount');
-const timerDiv = document.getElementById('timer');
-const counter = document.getElementById('counter');
+const statusEl = document.getElementById('status');
+const playersCountEl = document.getElementById('playersCount');
+const timerEl = document.getElementById('timer');
+const counterEl = document.getElementById('counter');
 const clickBtn = document.getElementById('clickBtn');
 
+if (!userId) {
+  statusEl.innerText = 'Ошибка: не передан параметр user';
+} else {
+  checkStart();
+}
+
 function checkStart() {
-  fetch(`http://localhost:3000/check-start/${userId}`)
+  fetch(`/api/check-start/${userId}`)
     .then(r => r.json())
     .then(data => {
-      playersCount.innerText = `Участников: ${data.count}`;
+      playersCountEl.innerText = `Участников: ${data.count}`;
       if (data.start) startCountdown();
       else setTimeout(checkStart, 1000);
+    })
+    .catch(() => {
+      statusEl.innerText = 'Ошибка связи с сервером';
+      setTimeout(checkStart, 1500);
     });
 }
 
 function startCountdown() {
   let count = 3;
-  status.innerText = 'Игра начнётся через ' + count;
-  const countdown = setInterval(() => {
+  statusEl.innerText = 'Игра начнётся через ' + count;
+  const t = setInterval(() => {
     count--;
-    if (count > 0) status.innerText = 'Игра начнётся через ' + count;
+    if (count > 0) statusEl.innerText = 'Игра начнётся через ' + count;
     else {
-      clearInterval(countdown);
+      clearInterval(t);
       startGame();
     }
   }, 1000);
 }
 
 function startGame() {
-  status.innerText = 'Игра началась!';
+  statusEl.innerText = 'Игра началась!';
   clickBtn.style.display = 'inline-block';
-  let timeLeft = 30;
-  timerDiv.innerText = timeLeft + 's';
+  clicks = 0;
+  counterEl.innerText = clicks;
 
-  clickBtn.addEventListener('click', () => {
+  let timeLeft = 30;
+  timerEl.innerText = timeLeft + 's';
+
+  // не навешиваем повторно — используем onclick
+  clickBtn.onclick = () => {
     clicks++;
-    counter.innerText = clicks;
-  });
+    counterEl.innerText = clicks;
+  };
 
   const interval = setInterval(() => {
     timeLeft--;
-    timerDiv.innerText = timeLeft + 's';
+    timerEl.innerText = timeLeft + 's';
     if (timeLeft <= 0) {
       clearInterval(interval);
       clickBtn.disabled = true;
-      status.innerText = 'Игра окончена!';
+      statusEl.innerText = 'Игра окончена! Отправляем результат...';
 
-      if (window.Telegram.WebApp) {
+      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
         window.Telegram.WebApp.sendData(JSON.stringify({ clicks }));
-        setTimeout(() => window.Telegram.WebApp.close(), 500);
+        setTimeout(() => window.Telegram.WebApp.close(), 400);
       } else {
-        alert('Игра окончена! Ваши клики: ' + clicks);
+        // локальный тест вне Telegram — просто подсказка
+        alert('Игра окончена! Ваши клики: ' + clicks + '\nРезультат отправится в Telegram-чате.');
       }
     }
   }, 1000);
 }
-
-// старт проверки
-checkStart();
 </script>
 </body>
 </html>
