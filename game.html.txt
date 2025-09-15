@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Click Casino</title>
+<style>
+  body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+  #clickBtn { font-size: 24px; padding: 20px 40px; margin-top: 20px; }
+  #counter { font-size: 30px; margin-top: 20px; }
+  #timer { font-size: 24px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>Click Casino</h1>
+<div id="timer">30s</div>
+<div id="counter">0</div>
+<button id="clickBtn">CLICK 🖱️</button>
+
+<script>
+  let clicks = 0;
+  let timeLeft = 30;
+  const counter = document.getElementById('counter');
+  const timer = document.getElementById('timer');
+  const clickBtn = document.getElementById('clickBtn');
+
+  clickBtn.addEventListener('click', () => {
+    clicks++;
+    counter.innerText = clicks;
+  });
+
+  const interval = setInterval(() => {
+    timeLeft--;
+    timer.innerText = timeLeft + 's';
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      clickBtn.disabled = true;
+
+      // Отправляем результат боту через Telegram Web App
+      if (window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({ clicks }));
+      } else {
+        alert('Игра окончена! Ваши клики: ' + clicks);
+      }
+    }
+  }, 1000);
+</script>
+</body>
+</html>

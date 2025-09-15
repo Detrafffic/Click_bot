@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Click Casino</title>
+<style>
+  body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+  #status { font-size: 24px; margin-bottom: 20px; }
+  #timer { font-size: 24px; margin-bottom: 20px; }
+  #counter { font-size: 30px; margin-bottom: 20px; }
+  #clickBtn { font-size: 24px; padding: 20px 40px; display: none; }
+</style>
+</head>
+<body>
+<h1>Click Casino</h1>
+<div id="status">Поиск игроков...</div>
+<div id="timer"></div>
+<div id="counter">0</div>
+<button id="clickBtn">CLICK 🖱️</button>
+
+<script>
+let clicks = 0;
+const status = document.getElementById('status');
+const timerDiv = document.getElementById('timer');
+const counter = document.getElementById('counter');
+const clickBtn = document.getElementById('clickBtn');
+
+// Игрок ждёт, пока бот скажет, что в комнате достаточно игроков
+// Для теста используем setTimeout, в реальном проекте бот сигнализирует через Web App initData или endpoint
+setTimeout(() => startCountdown(), 2000); // имитация поиска игроков
+
+function startCountdown() {
+  let count = 3;
+  status.innerText = 'Игра начнётся через ' + count;
+  const countdown = setInterval(() => {
+    count--;
+    if (count > 0) {
+      status.innerText = 'Игра начнётся через ' + count;
+    } else {
+      clearInterval(countdown);
+      startGame();
+    }
+  }, 1000);
+}
+
+function startGame() {
+  status.innerText = 'Игра началась!';
+  clickBtn.style.display = 'inline-block';
+  let timeLeft = 30;
+  timerDiv.innerText = timeLeft + 's';
+
+  clickBtn.addEventListener('click', () => {
+    clicks++;
+    counter.innerText = clicks;
+  });
+
+  const interval = setInterval(() => {
+    timeLeft--;
+    timerDiv.innerText = timeLeft + 's';
+    if (timeLeft <= 0) {
+      clearInterval(interval);
+      clickBtn.disabled = true;
+      status.innerText = 'Игра окончена!';
+
+      if (window.Telegram.WebApp) {
+        // Отправляем результат боту
+        window.Telegram.WebApp.sendData(JSON.stringify({ clicks }));
+
+        // Закрываем Web App через 500мс
+        setTimeout(() => {
+          window.Telegram.WebApp.close();
+        }, 500);
+      } else {
+        alert('Игра окончена! Ваши клики: ' + clicks);
+      }
+    }
+  }, 1000);
+}
+</script>
+</body>
+</html>
