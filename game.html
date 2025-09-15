@@ -6,6 +6,7 @@
 <style>
   body { font-family: sans-serif; text-align: center; margin-top: 50px; }
   #status { font-size: 24px; margin-bottom: 20px; }
+  #playersCount { font-size: 20px; margin-bottom: 20px; }
   #timer { font-size: 24px; margin-bottom: 20px; }
   #counter { font-size: 30px; margin-bottom: 20px; }
   #clickBtn { font-size: 24px; padding: 20px 40px; display: none; }
@@ -14,26 +15,37 @@
 <body>
 <h1>Click Casino</h1>
 <div id="status">Поиск игроков...</div>
+<div id="playersCount">Участников: 0</div>
 <div id="timer"></div>
 <div id="counter">0</div>
 <button id="clickBtn">CLICK 🖱️</button>
 
 <script>
+const urlParams = new URLSearchParams(window.location.search);
+const userId = urlParams.get('user');
 let clicks = 0;
+
 const status = document.getElementById('status');
+const playersCount = document.getElementById('playersCount');
 const timerDiv = document.getElementById('timer');
 const counter = document.getElementById('counter');
 const clickBtn = document.getElementById('clickBtn');
 
-const params = new URLSearchParams(window.location.search);
-const startGameSignal = params.get('start') === 'true';
-
-if (!startGameSignal) {
-  status.innerText = 'Поиск игроков...';
-} else {
-  startCountdown();
+// Функция проверки у бота, можно ли стартовать игру
+function checkStart() {
+  fetch(`http://localhost:3000/check-start/${userId}`)
+    .then(r => r.json())
+    .then(data => {
+      playersCount.innerText = `Участников: ${data.count}`;
+      if (data.start) {
+        startCountdown();
+      } else {
+        setTimeout(checkStart, 1000);
+      }
+    });
 }
 
+// ======== Отсчёт перед игрой ========
 function startCountdown() {
   let count = 3;
   status.innerText = 'Игра начнётся через ' + count;
@@ -48,6 +60,7 @@ function startCountdown() {
   }, 1000);
 }
 
+// ======== Основная игра ========
 function startGame() {
   status.innerText = 'Игра началась!';
   clickBtn.style.display = 'inline-block';
@@ -76,6 +89,9 @@ function startGame() {
     }
   }, 1000);
 }
+
+// ======== Старт проверки ========
+checkStart();
 </script>
 </body>
 </html>
